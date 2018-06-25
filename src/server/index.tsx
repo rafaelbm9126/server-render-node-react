@@ -17,25 +17,36 @@ app.set('port', port);
 
 app.use(Express.static("dist"));
 
-app.get('*', (req, res) => {
-    const sheet = new ServerStyleSheet();
+const apli = new App({});
 
-    new App({}).fetchData()
-        .then(({ data }) => {
-
-            const markup = renderToString(
-                sheet.collectStyles(<App objeto={data} />)
-            );
-
-            const styles = sheet.getStyleTags();
-
-            res.send( Static(markup, styles, data) );
-
-        })
-        .catch((error) => {
-            console.log('Error: axios ~> server/index.tsx', error);
-        });
+app.get('/user/:user', (req, res) => {
+    apli.fetchDataUser(req.params.user, (data) => {
+        triggerView(res, data);
+    });
 });
+
+app.get('/user/:user/post/:post', (req, res) => {
+    apli.fetchDataUser(req.params.user, (data) => {
+        triggerView(res, data);
+    }, req.params.post);
+});
+
+app.get('*', (req, res) => {
+    // console.log( req.originalUrl );
+    apli.fetchDataUsers()
+        .then(({ data }) => {
+            triggerView(res, { ListUser: data });
+        })
+});
+
+function triggerView(res: any, data: any) {
+    const sheet = new ServerStyleSheet();
+    const markup = renderToString(
+        sheet.collectStyles(<App objeto={data} />)
+    );
+    const styles = sheet.getStyleTags();
+    res.send( Static(markup, styles, data) );
+}
 
 app.listen(port, () => {
     console.log('runnig for :' + port);
